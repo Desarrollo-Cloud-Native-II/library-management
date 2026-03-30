@@ -12,17 +12,20 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-
 /**
- * Unit test for Function class.
+ * Pruebas unitarias para la clase Function.
+ * Utiliza Mockito para simular las dependencias de Azure Functions.
  */
 public class FunctionTest {
+
     /**
-     * Unit test for HttpTriggerJava method.
+     * Prueba unitaria del método HttpTriggerJava.
+     * Verifica que el trigger HTTP responda correctamente con estado 200 OK.
+     * 
+     * @throws Exception si ocurre un error durante la ejecución del test
      */
     @Test
     public void testHttpTriggerJava() throws Exception {
-        // Setup
         @SuppressWarnings("unchecked")
         final HttpRequestMessage<Optional<String>> req = mock(HttpRequestMessage.class);
 
@@ -44,10 +47,8 @@ public class FunctionTest {
         final ExecutionContext context = mock(ExecutionContext.class);
         doReturn(Logger.getGlobal()).when(context).getLogger();
 
-        // Invoke
         final HttpResponseMessage ret = new Function().run(req, context);
 
-        // Verify
         assertEquals(HttpStatus.OK, ret.getStatus());
     }
 }

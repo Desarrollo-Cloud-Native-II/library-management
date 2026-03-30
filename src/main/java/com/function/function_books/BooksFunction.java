@@ -9,13 +9,20 @@ import com.google.gson.Gson;
 
 import java.util.Optional;
 
+/**
+ * Funciones HTTP para gestionar libros del catálogo de la biblioteca.
+ * Expone endpoints REST para operaciones CRUD de libros.
+ */
 public class BooksFunction {
     private final BookRepository bookRepository = new BookRepository();
     private final Gson gson = new Gson();
 
     /**
-     * Get all books
-     * GET /api/books
+     * Obtiene todos los libros del catálogo.
+     * 
+     * @param request solicitud HTTP
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con lista de libros en formato JSON
      */
     @FunctionName("GetAllBooks")
     public HttpResponseMessage getAllBooks(
@@ -39,8 +46,12 @@ public class BooksFunction {
     }
 
     /**
-     * Get book by ID
-     * GET /api/books/{id}
+     * Obtiene un libro por su ID.
+     * 
+     * @param request solicitud HTTP
+     * @param id      identificador del libro
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con el libro en formato JSON o error 404
      */
     @FunctionName("GetBookById")
     public HttpResponseMessage getBookById(
@@ -66,8 +77,11 @@ public class BooksFunction {
     }
 
     /**
-     * Get available books
-     * GET /api/books/available
+     * Obtiene todos los libros disponibles para préstamo.
+     * 
+     * @param request solicitud HTTP
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con lista de libros disponibles en formato JSON
      */
     @FunctionName("GetAvailableBooks")
     public HttpResponseMessage getAvailableBooks(
@@ -91,8 +105,11 @@ public class BooksFunction {
     }
 
     /**
-     * Create new book
-     * POST /api/books
+     * Crea un nuevo libro en el catálogo.
+     * 
+     * @param request solicitud HTTP con datos del libro en el body (JSON)
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con el libro creado o errores de validación
      */
     @FunctionName("CreateBook")
     public HttpResponseMessage createBook(
@@ -113,12 +130,10 @@ public class BooksFunction {
 
             Book book = gson.fromJson(body, Book.class);
 
-            // Generate ID if not provided
             if (book.getId() == null || book.getId().isEmpty()) {
                 book.setId(bookRepository.getNextId());
             }
 
-            // Set default status if not provided
             if (book.getStatus() == null) {
                 book.setStatus(BookStatus.AVAILABLE);
             }
@@ -138,8 +153,12 @@ public class BooksFunction {
     }
 
     /**
-     * Update book
-     * PUT /api/books/{id}
+     * Actualiza un libro existente.
+     * 
+     * @param request solicitud HTTP con datos actualizados del libro (JSON)
+     * @param id      identificador del libro a actualizar
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con el libro actualizado o error 404
      */
     @FunctionName("UpdateBook")
     public HttpResponseMessage updateBook(
@@ -151,7 +170,6 @@ public class BooksFunction {
         context.getLogger().info("Updating book with ID: " + id);
 
         try {
-            // Check if book exists
             Optional<Book> existingBook = bookRepository.findById(id);
             if (!existingBook.isPresent()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
@@ -168,7 +186,7 @@ public class BooksFunction {
             }
 
             Book book = gson.fromJson(body, Book.class);
-            book.setId(id); // Ensure ID from URL is used
+            book.setId(id);
 
             Book updatedBook = bookRepository.save(book);
 
@@ -185,8 +203,12 @@ public class BooksFunction {
     }
 
     /**
-     * Update book status
-     * PATCH /api/books/{id}/status
+     * Actualiza el estado de disponibilidad de un libro.
+     * 
+     * @param request solicitud HTTP con parámetro status en query string
+     * @param id      identificador del libro
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con el libro actualizado o errores de validación
      */
     @FunctionName("UpdateBookStatus")
     public HttpResponseMessage updateBookStatus(
@@ -233,8 +255,12 @@ public class BooksFunction {
     }
 
     /**
-     * Delete book
-     * DELETE /api/books/{id}
+     * Elimina un libro del catálogo.
+     * 
+     * @param request solicitud HTTP
+     * @param id      identificador del libro a eliminar
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con confirmación o error 404
      */
     @FunctionName("DeleteBook")
     public HttpResponseMessage deleteBook(

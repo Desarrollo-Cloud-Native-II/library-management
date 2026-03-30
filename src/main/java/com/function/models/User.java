@@ -1,5 +1,9 @@
 package com.function.models;
 
+/**
+ * Representa un usuario del sistema de biblioteca.
+ * Contiene información personal y estado de activación del usuario.
+ */
 public class User {
     private String id;
     private String firstName;
@@ -8,11 +12,22 @@ public class User {
     private String email;
     private boolean active;
 
-    // Empty constructor
+    /**
+     * Constructor vacío para inicialización por defecto.
+     */
     public User() {
     }
 
-    // Constructor with all parameters
+    /**
+     * Constructor con todos los parámetros.
+     * 
+     * @param id        identificador único del usuario
+     * @param firstName nombre del usuario
+     * @param lastName  apellido del usuario
+     * @param rut       RUT del usuario (formato chileno)
+     * @param email     correo electrónico del usuario
+     * @param active    estado de activación del usuario
+     */
     public User(String id, String firstName, String lastName, String rut, String email, boolean active) {
         this.id = id;
         this.firstName = firstName;
@@ -22,7 +37,6 @@ public class User {
         this.active = active;
     }
 
-    // Getters and Setters
     public String getId() {
         return id;
     }

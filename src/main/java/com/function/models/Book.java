@@ -1,6 +1,11 @@
 package com.function.models;
 
+/**
+ * Representa un libro en el catálogo de la biblioteca.
+ * Contiene información bibliográfica completa y estado de disponibilidad.
+ */
 public class Book {
+
     private String id;
     private String title;
     private String author;
@@ -12,11 +17,26 @@ public class Book {
     private String description;
     private BookStatus status;
 
-    // Empty constructor
+    /**
+     * Constructor vacío para inicialización por defecto.
+     */
     public Book() {
     }
 
-    // Constructor with all parameters
+    /**
+     * Constructor con todos los parámetros.
+     * 
+     * @param id              identificador único del libro
+     * @param title           título del libro
+     * @param author          autor del libro
+     * @param publisher       editorial del libro
+     * @param publicationYear año de publicación
+     * @param language        idioma del libro
+     * @param isbn            código ISBN del libro
+     * @param genre           género literario
+     * @param description     descripción o sinopsis del libro
+     * @param status          estado de disponibilidad del libro
+     */
     public Book(String id, String title, String author, String publisher,
             int publicationYear, String language, String isbn,
             String genre, String description, BookStatus status) {
@@ -32,7 +52,6 @@ public class Book {
         this.status = status;
     }
 
-    // Getters and Setters
     public String getId() {
         return id;
     }
@@ -113,7 +132,9 @@ public class Book {
         this.status = status;
     }
 
-    // Enum for book status
+    /**
+     * Estados posibles de un libro en el sistema.
+     */
     public enum BookStatus {
         AVAILABLE,
         BORROWED,

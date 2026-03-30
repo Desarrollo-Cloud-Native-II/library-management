@@ -13,6 +13,10 @@ import com.google.gson.GsonBuilder;
 import java.time.LocalDate;
 import java.util.Optional;
 
+/**
+ * Funciones HTTP para gestionar préstamos de libros.
+ * Expone endpoints REST para operaciones CRUD de préstamos y devoluciones.
+ */
 public class LoansFunction {
     private final LoanRepository loanRepository = new LoanRepository();
     private final BookRepository bookRepository = new BookRepository();
@@ -34,8 +38,11 @@ public class LoansFunction {
             .create();
 
     /**
-     * Get all loans
-     * GET /api/loans
+     * Obtiene todos los préstamos del sistema.
+     * 
+     * @param request solicitud HTTP
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con lista de préstamos en formato JSON
      */
     @FunctionName("GetAllLoans")
     public HttpResponseMessage getAllLoans(
@@ -59,8 +66,12 @@ public class LoansFunction {
     }
 
     /**
-     * Get loan by ID
-     * GET /api/loans/{id}
+     * Obtiene un préstamo por su ID.
+     * 
+     * @param request solicitud HTTP
+     * @param id      identificador del préstamo
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con el préstamo en formato JSON o error 404
      */
     @FunctionName("GetLoanById")
     public HttpResponseMessage getLoanById(
@@ -86,8 +97,11 @@ public class LoansFunction {
     }
 
     /**
-     * Get active loans
-     * GET /api/loans/active
+     * Obtiene todos los préstamos activos.
+     * 
+     * @param request solicitud HTTP
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con lista de préstamos activos en formato JSON
      */
     @FunctionName("GetActiveLoans")
     public HttpResponseMessage getActiveLoans(
@@ -111,8 +125,12 @@ public class LoansFunction {
     }
 
     /**
-     * Get overdue loans
-     * GET /api/loans/overdue
+     * Obtiene todos los préstamos vencidos.
+     * Actualiza automáticamente el estado de préstamos vencidos antes de consultar.
+     * 
+     * @param request solicitud HTTP
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con lista de préstamos vencidos en formato JSON
      */
     @FunctionName("GetOverdueLoans")
     public HttpResponseMessage getOverdueLoans(
@@ -123,7 +141,6 @@ public class LoansFunction {
         context.getLogger().info("Getting overdue loans");
 
         try {
-            // Update overdue status first
             loanRepository.updateOverdueLoans();
 
             return request.createResponseBuilder(HttpStatus.OK)
@@ -139,8 +156,12 @@ public class LoansFunction {
     }
 
     /**
-     * Get loans by user ID
-     * GET /api/loans/user/{userId}
+     * Obtiene todos los préstamos de un usuario específico.
+     * 
+     * @param request solicitud HTTP
+     * @param userId  identificador del usuario
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con lista de préstamos del usuario en formato JSON
      */
     @FunctionName("GetLoansByUserId")
     public HttpResponseMessage getLoansByUserId(
@@ -165,8 +186,12 @@ public class LoansFunction {
     }
 
     /**
-     * Get loans by book ID
-     * GET /api/loans/book/{bookId}
+     * Obtiene todos los préstamos de un libro específico.
+     * 
+     * @param request solicitud HTTP
+     * @param bookId  identificador del libro
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con lista de préstamos del libro en formato JSON
      */
     @FunctionName("GetLoansByBookId")
     public HttpResponseMessage getLoansByBookId(
@@ -191,8 +216,12 @@ public class LoansFunction {
     }
 
     /**
-     * Create new loan (borrow a book)
-     * POST /api/loans
+     * Crea un nuevo préstamo de libro.
+     * Valida disponibilidad del libro y actualiza su estado a BORROWED.
+     * 
+     * @param request solicitud HTTP con datos del préstamo en el body (JSON)
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con el préstamo creado o errores de validación
      */
     @FunctionName("CreateLoan")
     public HttpResponseMessage createLoan(
@@ -213,7 +242,6 @@ public class LoansFunction {
 
             Loan loan = gson.fromJson(body, Loan.class);
 
-            // Validate required fields
             if (loan.getBookId() == null || loan.getBookId().isEmpty()) {
                 return request.createResponseBuilder(HttpStatus.BAD_REQUEST)
                         .body("Book ID is required")
@@ -226,7 +254,6 @@ public class LoansFunction {
                         .build();
             }
 
-            // Check if book is available
             Optional<Book> book = bookRepository.findById(loan.getBookId());
             if (!book.isPresent()) {
                 return request.createResponseBuilder(HttpStatus.NOT_FOUND)
@@ -240,28 +267,22 @@ public class LoansFunction {
                         .build();
             }
 
-            // Generate ID if not provided
             if (loan.getId() == null || loan.getId().isEmpty()) {
                 loan.setId(loanRepository.getNextId());
             }
 
-            // Set loan date to today if not provided
             if (loan.getLoanDate() == null) {
                 loan.setLoanDate(LocalDate.now());
             }
 
-            // Set expected return date (14 days from loan date) if not provided
             if (loan.getExpectedReturnDate() == null) {
                 loan.setExpectedReturnDate(loan.getLoanDate().plusDays(14));
             }
 
-            // Set status to ACTIVE
             loan.setStatus(LoanStatus.ACTIVE);
 
-            // Save loan
             Loan savedLoan = loanRepository.save(loan);
 
-            // Update book status to BORROWED
             bookRepository.updateStatus(loan.getBookId(), Book.BookStatus.BORROWED);
 
             return request.createResponseBuilder(HttpStatus.CREATED)
@@ -277,8 +298,14 @@ public class LoansFunction {
     }
 
     /**
-     * Return a book
-     * PATCH /api/loans/{id}/return
+     * Registra la devolución de un libro prestado.
+     * Actualiza el estado del préstamo a RETURNED y el estado del libro a
+     * AVAILABLE.
+     * 
+     * @param request solicitud HTTP
+     * @param id      identificador del préstamo a devolver
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con el préstamo actualizado o errores de validación
      */
     @FunctionName("ReturnBook")
     public HttpResponseMessage returnBook(
@@ -306,12 +333,10 @@ public class LoansFunction {
                         .build();
             }
 
-            // Return the book
             LocalDate returnDate = LocalDate.now();
             boolean returned = loanRepository.returnBook(id, returnDate);
 
             if (returned) {
-                // Update book status to AVAILABLE
                 bookRepository.updateStatus(loan.getBookId(), Book.BookStatus.AVAILABLE);
 
                 Optional<Loan> updatedLoan = loanRepository.findById(id);
@@ -333,8 +358,12 @@ public class LoansFunction {
     }
 
     /**
-     * Delete loan
-     * DELETE /api/loans/{id}
+     * Elimina un préstamo del sistema.
+     * 
+     * @param request solicitud HTTP
+     * @param id      identificador del préstamo a eliminar
+     * @param context contexto de ejecución de Azure Functions
+     * @return respuesta HTTP con confirmación o error 404
      */
     @FunctionName("DeleteLoan")
     public HttpResponseMessage deleteLoan(

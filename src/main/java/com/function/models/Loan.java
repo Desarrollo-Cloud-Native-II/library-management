@@ -2,6 +2,11 @@ package com.function.models;
 
 import java.time.LocalDate;
 
+/**
+ * Representa un préstamo de libro a un usuario.
+ * Gestiona las fechas de préstamo, retorno esperado y real, junto con el estado
+ * del préstamo.
+ */
 public class Loan {
     private String id;
     private String bookId;
@@ -11,11 +16,23 @@ public class Loan {
     private LocalDate actualReturnDate;
     private LoanStatus status;
 
-    // Empty constructor
+    /**
+     * Constructor vacío para inicialización por defecto.
+     */
     public Loan() {
     }
 
-    // Constructor with all parameters
+    /**
+     * Constructor con todos los parámetros.
+     * 
+     * @param id                 identificador único del préstamo
+     * @param bookId             identificador del libro prestado
+     * @param userId             identificador del usuario que realiza el préstamo
+     * @param loanDate           fecha en que se realizó el préstamo
+     * @param expectedReturnDate fecha esperada de devolución
+     * @param actualReturnDate   fecha real de devolución (null si no devuelto)
+     * @param status             estado actual del préstamo
+     */
     public Loan(String id, String bookId, String userId, LocalDate loanDate,
             LocalDate expectedReturnDate, LocalDate actualReturnDate, LoanStatus status) {
         this.id = id;
@@ -27,7 +44,6 @@ public class Loan {
         this.status = status;
     }
 
-    // Getters and Setters
     public String getId() {
         return id;
     }
@@ -84,7 +100,9 @@ public class Loan {
         this.status = status;
     }
 
-    // Enum for loan status
+    /**
+     * Estados posibles de un préstamo en el sistema.
+     */
     public enum LoanStatus {
         ACTIVE,
         RETURNED,

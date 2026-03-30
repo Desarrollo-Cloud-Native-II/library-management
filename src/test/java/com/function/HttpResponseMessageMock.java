@@ -6,8 +6,9 @@ import java.util.Map;
 import java.util.HashMap;
 
 /**
- * The mock for HttpResponseMessage, can be used in unit tests to verify if the
- * returned response by HTTP trigger function is correct or not.
+ * Mock de HttpResponseMessage para pruebas unitarias.
+ * Simula la respuesta HTTP de Azure Functions para verificar el comportamiento
+ * de las funciones.
  */
 public class HttpResponseMessageMock implements HttpResponseMessage {
     private int httpStatusCode;
@@ -15,6 +16,13 @@ public class HttpResponseMessageMock implements HttpResponseMessage {
     private Object body;
     private Map<String, String> headers;
 
+    /**
+     * Constructor del mock de respuesta HTTP.
+     * 
+     * @param status  estado HTTP de la respuesta
+     * @param headers encabezados de la respuesta
+     * @param body    cuerpo de la respuesta
+     */
     public HttpResponseMessageMock(HttpStatusType status, Map<String, String> headers, Object body) {
         this.httpStatus = status;
         this.httpStatusCode = status.value();
@@ -42,6 +50,9 @@ public class HttpResponseMessageMock implements HttpResponseMessage {
         return this.body;
     }
 
+    /**
+     * Builder mock para construir respuestas HTTP de prueba.
+     */
     public static class HttpResponseMessageBuilderMock implements HttpResponseMessage.Builder {
         private Object body;
         private int httpStatusCode;

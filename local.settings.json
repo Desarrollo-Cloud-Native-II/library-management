@@ -2,6 +2,10 @@
   "IsEncrypted": false,
   "Values": {
     "AzureWebJobsStorage": "UseDevelopmentStorage=true",
-    "FUNCTIONS_WORKER_RUNTIME": "java"
+    "FUNCTIONS_WORKER_RUNTIME": "java",
+    "ORACLE_TNS_ADMIN": "./Wallet_DCNII",
+    "ORACLE_DB_SERVICE": "dcnii_tp",
+    "ORACLE_DB_USER": "ADMIN",
+    "ORACLE_DB_PASSWORD": "DesarrolloCN2."
   }
 }
