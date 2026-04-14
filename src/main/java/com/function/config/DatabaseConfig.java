@@ -64,7 +64,6 @@ public class DatabaseConfig {
         config.setPassword(password);
         config.setDriverClassName("oracle.jdbc.OracleDriver");
 
-        // Configuración del pool de conexiones
         config.setMaximumPoolSize(10);
         config.setMinimumIdle(2);
         config.setConnectionTimeout(30000); // 30 segundos

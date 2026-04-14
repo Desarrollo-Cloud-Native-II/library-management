@@ -129,7 +129,7 @@ public class UserRepository {
      */
     public User save(User user) {
         if (user.getId() != null && !user.getId().isEmpty() && findById(user.getId()).isPresent()) {
-            // Update existing user
+
             String sql = "UPDATE users SET first_name = ?, last_name = ?, rut = ?, email = ?, active = ? WHERE id = ?";
 
             try (Connection conn = DatabaseConfig.getConnection();

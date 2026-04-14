@@ -214,7 +214,7 @@ public class LoanRepository {
      */
     public Loan save(Loan loan) {
         if (loan.getId() != null && !loan.getId().isEmpty() && findById(loan.getId()).isPresent()) {
-            // Update existing loan
+
             String sql = "UPDATE loans SET book_id = ?, user_id = ?, loan_date = ?, expected_return_date = ?, " +
                     "actual_return_date = ?, status = ? WHERE id = ?";
 

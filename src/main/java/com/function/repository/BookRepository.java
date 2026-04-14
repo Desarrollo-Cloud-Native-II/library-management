@@ -78,7 +78,6 @@ public class BookRepository {
      */
     public Book save(Book book) {
         if (book.getId() != null && !book.getId().isEmpty() && findById(book.getId()).isPresent()) {
-            // Update existing book
             String sql = "UPDATE books SET title = ?, author = ?, publisher = ?, publication_year = ?, " +
                     "language = ?, isbn = ?, genre = ?, description = ?, status = ? WHERE id = ?";
 

@@ -67,6 +67,13 @@
             <version>5.1.0</version>
         </dependency>
 
+        <!-- GraphQL Java -->
+        <dependency>
+            <groupId>com.graphql-java</groupId>
+            <artifactId>graphql-java</artifactId>
+            <version>21.3</version>
+        </dependency>
+
         <!-- Test -->
         <dependency>
             <groupId>org.junit.jupiter</groupId>
@@ -120,7 +127,6 @@
                     <!-- refers
                     https://github.com/microsoft/azure-maven-plugins/wiki/Azure-Functions:-Configuration-Details
                     for all valid configurations for application insights-->
-                    <!-- <disableAppInsights></disableAppInsights> -->
                     <runtime>
                         <!-- runtime os, could be windows, linux (default) or docker-->
                         <!-- <os>linux</os> -->
