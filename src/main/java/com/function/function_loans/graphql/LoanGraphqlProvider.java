@@ -7,6 +7,8 @@ import com.function.models.Loan;
 import com.function.models.Loan.LoanStatus;
 import com.function.models.Book;
 import com.function.models.User;
+import com.function.events.EventGridPublisher;
+import com.function.events.LoanCreatedEvent;
 
 import graphql.ExecutionInput;
 import graphql.ExecutionResult;
@@ -20,6 +22,7 @@ import graphql.schema.idl.TypeDefinitionRegistry;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.Logger;
 
 /**
  * Proveedor de GraphQL para operaciones sobre préstamos.
@@ -40,15 +43,24 @@ public class LoanGraphqlProvider {
     private final LoanRepository loanRepository;
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
+    private final EventGridPublisher eventGridPublisher;
+    private final Logger logger;
 
     public LoanGraphqlProvider() {
-        this(new LoanRepository(), new BookRepository(), new UserRepository());
+        this(new LoanRepository(), new BookRepository(), new UserRepository(), null, null);
     }
 
-    LoanGraphqlProvider(LoanRepository loanRepository, BookRepository bookRepository, UserRepository userRepository) {
+    public LoanGraphqlProvider(EventGridPublisher eventGridPublisher, Logger logger) {
+        this(new LoanRepository(), new BookRepository(), new UserRepository(), eventGridPublisher, logger);
+    }
+
+    LoanGraphqlProvider(LoanRepository loanRepository, BookRepository bookRepository, UserRepository userRepository,
+            EventGridPublisher eventGridPublisher, Logger logger) {
         this.loanRepository = loanRepository;
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
+        this.eventGridPublisher = eventGridPublisher;
+        this.logger = logger;
 
         String schemaString = "type Query {" +
                 "  loans: [Loan!]!" +
@@ -189,11 +201,25 @@ public class LoanGraphqlProvider {
 
             bookRepository.updateStatus(bookId, Book.BookStatus.BORROWED);
 
+            // Publicar evento a Event Grid (no bloquea si falla)
+            try {
+                publishLoanCreatedEvent(savedLoan, bookId, userId);
+            } catch (Exception eventError) {
+                if (logger != null) {
+                    logger.warning("Error publicando evento, pero el préstamo se creó correctamente: "
+                            + eventError.getMessage());
+                }
+            }
+
             return Map.of(
                     FIELD_LOAN, savedLoan,
                     FIELD_SUCCESS, true,
                     FIELD_MESSAGE, "Loan created successfully");
         } catch (Exception e) {
+            if (logger != null) {
+                logger.severe("Error creando préstamo: " + e.getMessage());
+                e.printStackTrace();
+            }
             return createErrorResponse("Error creating loan: " + e.getMessage());
         }
     }
@@ -314,10 +340,15 @@ public class LoanGraphqlProvider {
                         FIELD_MESSAGE, "Failed to return book");
             }
         } catch (Exception e) {
+            String errorMessage = e.getMessage() != null ? e.getMessage() : e.getClass().getName();
+            if (logger != null) {
+                logger.severe("Error al devolver libro: " + errorMessage);
+                e.printStackTrace();
+            }
             return Map.of(
                     FIELD_LOAN, null,
                     FIELD_SUCCESS, false,
-                    FIELD_MESSAGE, "Error returning book: " + e.getMessage());
+                    FIELD_MESSAGE, "Error returning book: " + errorMessage);
         }
     }
 
@@ -431,6 +462,52 @@ public class LoanGraphqlProvider {
             return Map.of(
                     FIELD_SUCCESS, false,
                     FIELD_MESSAGE, "Error deleting loan: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Publica un evento LoanCreated a Azure Event Grid.
+     */
+    private void publishLoanCreatedEvent(Loan loan, String bookId, String userId) {
+        if (eventGridPublisher == null || logger == null) {
+            if (logger != null) {
+                logger.warning("EventGridPublisher no configurado. Evento no publicado.");
+            }
+            return;
+        }
+
+        try {
+            // Obtener información del libro
+            Optional<Book> bookOpt = bookRepository.findById(bookId);
+            String bookTitle = bookOpt.map(Book::getTitle).orElse("Unknown Book");
+
+            // Obtener información del usuario
+            Optional<User> userOpt = userRepository.findById(userId);
+            String userName = "Unknown User";
+            String userEmail = "no-email@library.com";
+
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                userName = user.getFirstName() + " " + user.getLastName();
+                userEmail = user.getEmail();
+            }
+
+            // Crear el evento
+            LoanCreatedEvent event = new LoanCreatedEvent(
+                    loan.getId(),
+                    loan.getUserId(),
+                    loan.getBookId(),
+                    bookTitle,
+                    loan.getLoanDate().toString(),
+                    loan.getExpectedReturnDate().toString(),
+                    userName,
+                    userEmail);
+
+            // Publicar a Event Grid
+            eventGridPublisher.publishLoanCreatedEvent(event, logger);
+
+        } catch (Exception e) {
+            logger.severe("Error al publicar evento LoanCreated: " + e.getMessage());
         }
     }
 }

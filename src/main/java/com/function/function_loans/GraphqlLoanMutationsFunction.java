@@ -2,6 +2,7 @@ package com.function.function_loans;
 
 import com.function.function_loans.graphql.JsonUtils;
 import com.function.function_loans.graphql.LoanGraphqlProvider;
+import com.function.events.EventGridPublisher;
 import com.microsoft.azure.functions.ExecutionContext;
 import com.microsoft.azure.functions.HttpMethod;
 import com.microsoft.azure.functions.HttpRequestMessage;
@@ -37,7 +38,9 @@ public class GraphqlLoanMutationsFunction {
             "\"query\"\\s*:\\s*\"((?:\\\\.|[^\"])*+)\"",
             Pattern.DOTALL);
 
-    private final LoanGraphqlProvider graphQLProvider = new LoanGraphqlProvider();
+    // Configuración de Event Grid (idealmente desde variables de entorno)
+    private static final String EVENT_GRID_ENDPOINT = "https://dcnii-eventgrid.eastus-1.eventgrid.azure.net/api/events";
+    private static final String EVENT_GRID_KEY = "CcGZdBEIzkgkgTDCWPrYHt3jZ665H82Se8L6oeykof2PJiqsE41tJQQJ99CDACYeBjFXJ3w3AAABAZEG9KAn";
 
     /**
      * Función Azure que ejecuta mutaciones GraphQL sobre préstamos.
@@ -53,6 +56,12 @@ public class GraphqlLoanMutationsFunction {
             final ExecutionContext context) {
 
         context.getLogger().info("Executing GraphQL Loan Mutations");
+
+        // Crear EventGridPublisher
+        EventGridPublisher eventGridPublisher = new EventGridPublisher(EVENT_GRID_ENDPOINT, EVENT_GRID_KEY);
+
+        // Crear LoanGraphqlProvider con EventGridPublisher
+        LoanGraphqlProvider graphQLProvider = new LoanGraphqlProvider(eventGridPublisher, context.getLogger());
 
         String query = getQuery(request);
 

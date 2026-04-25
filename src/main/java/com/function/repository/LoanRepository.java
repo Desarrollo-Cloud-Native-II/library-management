@@ -310,7 +310,7 @@ public class LoanRepository {
      *         préstamo activo
      */
     public boolean returnBook(String loanId, LocalDate returnDate) {
-        String sql = "UPDATE loans SET actual_return_date = ?, status = 'RETURNED' WHERE id = ? AND status = 'ACTIVE'";
+        String sql = "UPDATE loans SET actual_return_date = ?, status = 'RETURNED' WHERE id = ? AND status IN ('ACTIVE', 'OVERDUE')";
 
         try (Connection conn = DatabaseConfig.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
